@@ -31,7 +31,7 @@ The app always displays the next 6 upcoming **Friday–Sunday** blocks from toda
 | 5 | Jul 10 | Jul 12 |
 | 6 | Jul 17 | Jul 19 |
 
-Next week, Jun 13–15 drops off and Jul 25–27 is added, and so on.
+Next week, Jun 12 drops off and Jul 24 is added, and so on.
 
 **Hard rules:**
 - Never collect or display data for any weekend on or after **September 1st**
@@ -44,7 +44,7 @@ Next week, Jun 13–15 drops off and Jul 25–27 is added, and so on.
 - If today IS the Friday, the weekend is still shown — same-day booking is still possible
 - Once it's Saturday, that weekend is gone and the next one rolls in
 - The per-window-type logic follows the same Friday anchor: Thu–Sun and Thu–Mon windows expire when their Friday has passed, even though they depart Thursday
-- The scheduler should skip fetching data for any window type whose outbound date has already passed
+- Skip fetching data for any window type whose outbound date has already passed
 
 ---
 
@@ -84,10 +84,11 @@ No open-jaw, no secondary airports. RMO only.
 | Language | Python 3.11+ | Preferred, rich ecosystem |
 | Flight data | SerpApi — `google_travel_explore` engine | 1 call returns all worldwide destinations for given dates, free tier sufficient |
 | Database | SQLite via `sqlite3` | Zero setup, local, perfect for logging price history |
-| Scheduler | `schedule` library | Auto-refresh every 2 days, backend only |
 | Dashboard | Streamlit | Python-native UI, no JS needed |
 | Data processing | pandas | Filtering, sorting, aggregation |
 | HTTP | `serpapi` Python package | Official client |
+
+No scheduler — data is collected manually via a refresh button in the dashboard.
 
 ---
 
@@ -106,28 +107,26 @@ No open-jaw, no secondary airports. RMO only.
   - `currency`: `USD`
   - `hl`: `en`
   - `adults`: `2`
+  - `stops`: `2` (1 stop or fewer)
+  - `max_price`: `1000`
+  - `type`: `1` (round trip)
 
 **RMO verified working** — tested live in SerpApi playground on Jun 9, 2026. Returned Athens ($77), Lisbon ($269), Dublin ($194), London and more. Status: Success.
 
-**No region filter — by design.** Leaving `arrival_area_id` blank returns all worldwide destinations in one call. Price filtering ($1,000 cap) is applied in Python after the response. This means Istanbul, Cairo, Dubai, or anything else cheap out of RMO will show up naturally. A region filter can always be added to the UI later without changing the data collection logic.
+**No region filter — by design.** Leaving `arrival_area_id` blank returns all worldwide destinations in one call. Price filtering ($1,000 cap) is applied via `max_price` param and also in Python after the response. This means Istanbul, Cairo, Dubai, or anything else cheap out of RMO will show up naturally.
 
 **1 call per window type — no departure_token needed.** Unlike `google_flights`, the Explore engine returns all destinations with prices in a single call. No second call required.
 
-### Call budget math
-| Window type | Frequency | Calls per refresh | Monthly cycles | Monthly calls |
-|-------------|-----------|-------------------|----------------|---------------|
-| Fri–Sun | Every 2 days | 6 | ~15 | 90 |
-| Thu–Sun | Every 2 days | 6 | ~15 | 90 |
-| Fri–Mon | Every 2 days | 6 | ~15 | 90 |
-| Thu–Mon | Weekly only | 6 | ~4 | 24 |
-| **Total** | | | | **~294/month** |
+**Actual response shape (verified from live call):**
+- Top-level key is `destinations`
+- IATA is at `destination_airport.code`
+- Price is `flight_price`
+- Stops is `number_of_stops`
+- Duration is `flight_duration` (outbound leg, minutes)
+- Entries without `flight_price` are suggestion-only rows — filter these out
 
-> ⚠️ Slightly over the 250/month free tier at peak. **Easy fix already built in:** Thu–Mon runs weekly not every 2 days, bringing it to ~216–294 depending on the month. If needed, also skip Fri–Mon on the same week as Thu–Mon runs to stay safely under 250.
-
-### Smarter call reduction (implement in scheduler)
-- Skip any weekend where the outbound date has already passed
-- Skip Thu departure windows if it's already Friday or later that week
-- This naturally reduces calls as the summer progresses and weekends drop off the rolling window
+### Call budget
+Manual refresh — user controls when calls are made. Each full refresh across all 4 window types × 6 weekends = **24 calls per refresh**. Free tier is 250 calls/month, giving ~10 full refreshes per month with headroom to spare.
 
 ---
 
@@ -177,16 +176,15 @@ moldova-flights/
 ├── .gitignore
 ├── requirements.txt
 ├── data/
-│   └── flights.db           ← SQLite database (auto-created on first run)
+│   └── flights.db           ← SQLite database (auto-created on first run, never committed)
 ├── src/
 │   ├── config.py            ← constants: locked weekends, budget thresholds, window types
 │   ├── windows.py           ← rolling window logic: compute next 6 Fri-Sun blocks
 │   ├── fetcher.py           ← SerpApi calls, rate limiting, error handling
 │   ├── db.py                ← SQLite read/write helpers
-│   ├── scheduler.py         ← auto-refresh every 2 days
 │   └── dashboard.py         ← Streamlit UI
 └── tests/
-    └── test_windows.py      ← unit tests for rolling window logic
+    └── test_windows.py      ← unit tests for rolling window logic (32/32 passing)
 ```
 
 ---
@@ -194,16 +192,20 @@ moldova-flights/
 ## Dashboard Features (Streamlit)
 
 ### Tabs
-1. **Overview** — 6 weekend cards, best price per weekend, color-coded by price tier
-2. **Weekend detail** — all options for a selected weekend, sortable/filterable
-3. **Price history** — line chart showing how prices for a route have changed over time (requires logged data)
-4. **Booking timing** — days-before-departure vs. average price, built from logged data
+1. **Overview** — 6 weekend cards in a 3×2 grid, best price per weekend, color-coded by price tier, Wizz Air badge
+2. **Weekend detail** — dropdown to pick a weekend, full sortable flight table with all destinations
+3. **Price history** — line chart showing how prices for a selected destination + weekend have changed over time
+4. **Booking timing** — scatter chart of days-before-departure vs price, aggregated across all weekends for a destination
 
-### Sidebar filters
+### Sidebar filters (persistent across all tabs)
 - Window type (Fri–Sun, Thu–Sun, Fri–Mon, Thu–Mon)
-- Max price slider (default at $1,000 ceiling)
-- Max stops (nonstop / 1 stop)
-- Destination country / city
+- Max price slider ($100–$1,000, default $1,000)
+- Max stops (Any / Nonstop only / 1 stop max)
+- Country multiselect — auto-populated from DB
+
+### Header
+- Title + last updated timestamp (reads from `fetch_log`, shows "Never" on first launch)
+- **Manual refresh button** — top right. Triggers a full fetch for all active windows. No auto-refresh on launch. Only makes API calls when clicked.
 
 ### Price tier badges
 | Badge | Range | Color |
@@ -213,41 +215,37 @@ moldova-flights/
 | OK | $500–$999 | Gray |
 | (hidden) | $1,000+ | Not stored or shown |
 
-### No manual refresh button
-Refresh is backend-only via scheduler. The dashboard shows "Last updated: [timestamp]" as read-only.
+### Wizz Air flagging
+Wizz Air results are flagged with a `W` badge in pink. User has a Wizz Air membership so actual price will be lower than displayed. Never exclude Wizz Air from results.
 
 ---
 
 ## Historical / Booking Timing Data Strategy
 1. **Self-logging from day one:** Every fetch writes to SQLite with `fetched_at` timestamp. Pre-trip fetches (before Jul 7) build the price curve for the actual trip weekends
-2. **Booking timing chart:** Plot `fetched_at` (x-axis, days before departure) vs `price_usd_2pax` (y-axis) per route — this directly answers "when should I book?"
-3. **No external historical source needed** — the rolling window approach means data collection starts now, giving 4+ weeks of history before the first Moldova weekend
+2. **Booking timing chart:** Plot days-before-departure (x-axis) vs price (y-axis) per destination — directly answers "when should I book?"
+3. **Empty states:** Both history tabs show a friendly message when fewer than 2 data points exist rather than an empty chart
 
 ---
 
 ## Build Order
 
 ### Phase 1 — Core pipeline
-- [ ] Project setup, `.env`, `requirements.txt`
-- [ ] `config.py` — budget thresholds, locked dates, window type definitions
-- [ ] `windows.py` — rolling 6-week Friday-anchored window calculator, Sep 1 hard stop, Aug 18–22 exclusion
-- [ ] `db.py` — SQLite schema creation, insert/query helpers
-- [ ] `fetcher.py` — SerpApi integration, roundtrip 2-call pattern, EUR→USD conversion if needed
-- [ ] Manual test: single fetch for one weekend, verify data in DB
+- [x] Project setup, `.env`, `requirements.txt`
+- [x] `config.py` — budget thresholds, locked dates, window type definitions
+- [x] `windows.py` — rolling 6-week Friday-anchored window calculator, Sep 1 hard stop, Aug 18–22 exclusion
+- [x] `db.py` — SQLite schema creation, insert/query helpers
+- [x] `fetcher.py` — SerpApi integration, live test confirmed RMO working
+- [x] Manual test: single fetch for one weekend, verified data in DB
 
-### Phase 2 — Scheduler
-- [ ] `scheduler.py` — every-2-days auto-refresh loop
-- [ ] Smart skip logic (past weekends, past departure days)
-- [ ] `fetch_log` integration
+### Phase 2 — Dashboard MVP (no scheduler — manual refresh only)
+- [x] Overview tab: 6 weekend cards with price badges and Wizz Air flagging
+- [x] Weekend detail tab: sortable flight table
+- [x] Last updated timestamp (read-only)
+- [x] Manual refresh button — no auto-refresh on launch
 
-### Phase 3 — Dashboard MVP
-- [ ] Overview tab: 6 weekend cards with price badges
-- [ ] Weekend detail tab: sortable flight table
-- [ ] Last updated timestamp (read-only)
-
-### Phase 4 — History & insights
-- [ ] Price history chart (line chart per route over time)
-- [ ] Booking timing chart (days-before vs price)
+### Phase 3 — History & insights
+- [x] Price history chart (line chart per route over time)
+- [x] Booking timing chart (days-before vs price)
 
 ---
 
@@ -260,13 +258,14 @@ SERPAPI_KEY=your_key_here
 
 ## Key Decisions Log
 - Prices always stored and displayed as **total for 2 people, roundtrip, USD**
-- **Wizz Air (W6) flights are flagged in the dashboard** — user has a Wizz Air membership so actual price will be lower than displayed. Never exclude Wizz Air from results.
+- **Wizz Air (W6) flights are flagged** — user has a Wizz Air membership so actual price will be lower than displayed. Never exclude Wizz Air.
 - USD only — user will mentally adjust for MDL exchange rate and Wizz Air membership discount
 - Nothing above $1,000 is stored or shown
 - Window is **rolling 6 Fridays forward** from today, not a fixed list
 - Aug 18–22 is a permanent hardcoded exclusion
 - Sep 1 is a hard data collection cutoff
 - No open-jaw routing (RMO only)
-- No manual refresh — backend scheduler only
-- Thu–Mon window is fetched but visually de-prioritized in dashboard
-- Pre-trip data collection is intentional and valuable for booking timing analysis
+- No scheduler — manual refresh button only, no auto-refresh on launch
+- Data collection intentionally starts before the trip (pre-July 7) to build booking timing history
+- `flights.db` is never committed to git — each machine maintains its own local database
+- Personal PC is the primary data collection machine — work computer is for code changes only
