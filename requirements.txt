@@ -1,0 +1,6 @@
+google-search-results
+streamlit
+pandas
+schedule
+python-dotenv
+pytest
