@@ -21,7 +21,11 @@ from src.db import (
     get_flights_for_window, get_price_history,
 )
 from src.windows import get_rolling_fridays, get_all_windows, get_window_dates
-from src.fetcher import fetch_explore, parse_explore_results
+from src.fetcher import (
+    discover_destinations, explore_result_status,
+    fetch_flights, parse_flights_results, flights_result_status, fetch_with_retry,
+    is_near_term, NEAR_TERM_SKIP_DAYS,
+)
 
 # ── Page config (must be the very first Streamlit call) ──────────────────────
 st.set_page_config(
@@ -43,6 +47,12 @@ WINDOW_DISPLAY = {
 }
 
 TIER_LABEL = {"great": "Great Deal", "good": "Good Option", "ok": "OK"}
+
+# ── Hybrid refresh tuning (Phase 3) ──────────────────────────────────────────
+PRICE_WINDOW_TYPE          = "fri_sun"   # only Fri–Sun is roundtrip-priced
+DESTINATION_SHORTLIST_SIZE = 4           # S — top-N cheapest priced per weekend
+EXCLUDE_IATA               = {"OTP"}     # Bucharest — never in the shortlist
+RETRY_ON_EMPTY             = 2           # extra google_flights attempts on a transient empty
 
 # ── Pure helpers ─────────────────────────────────────────────────────────────
 
@@ -274,6 +284,8 @@ html, body, [class*="css"] {
 # ── Session state ─────────────────────────────────────────────────────────────
 if "refresh_msg" not in st.session_state:
     st.session_state.refresh_msg = None
+if "refresh_warnings" not in st.session_state:
+    st.session_state.refresh_warnings = []
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -319,71 +331,165 @@ with st.sidebar:
 
 
 # ── Refresh ───────────────────────────────────────────────────────────────────
+def _shortlist_from_discovery(raw: dict) -> list:
+    """
+    Build the pricing shortlist from a one-way discovery response: dedupe by IATA
+    (keeping the cheapest occurrence), exclude OTP, rank by one-way price, take the
+    cheapest DESTINATION_SHORTLIST_SIZE.
+    """
+    seen = {}
+    for d in raw.get("destinations") or []:
+        iata  = (d.get("destination_airport") or {}).get("code")
+        price = d.get("flight_price")
+        if not iata or price is None or iata in EXCLUDE_IATA:
+            continue
+        if iata not in seen or price < seen[iata]["oneway_price"]:
+            seen[iata] = {
+                "iata":         iata,
+                "city":         d.get("name", ""),
+                "country":      d.get("country", ""),
+                "oneway_price": float(price),
+            }
+    ranked = sorted(seen.values(), key=lambda x: x["oneway_price"])
+    return ranked[:DESTINATION_SHORTLIST_SIZE]
+
+
 def do_refresh(debug: bool = False) -> dict:
+    """
+    Two-phase hybrid refresh, persisting the results.
+
+      Phase 1 (discovery): one one-way Explore call per Fri–Sun weekend → shortlist
+                           the top-N cheapest destinations (dedup, OTP excluded).
+      Phase 2 (pricing):   one google_flights roundtrip call per shortlist
+                           destination (with retry-on-empty) → cheapest itinerary.
+
+    IMPORTANT: makes NO Streamlit element calls inside the fetch loop. A sidebar
+    interaction (e.g. toggling Debug) queues a rerun that Streamlit raises at the
+    next st.* call, which would abort a half-finished refresh and discard every
+    row. Keeping the loop free of st.* calls lets it always run to completion;
+    progress UX is the single spinner around the call site.
+    """
     today      = date.today()
     fetched_at = datetime.utcnow().isoformat()
-    windows    = [w for w in get_all_windows(today) if w["outbound_date"] >= today]
+    windows    = [w for w in get_all_windows(today)
+                  if w["label"] == PRICE_WINDOW_TYPE and w["outbound_date"] >= today]
 
+    empty_result = {"rows": 0, "discovery_calls": 0, "pricing_calls": 0,
+                    "errors": 0, "empty": 0, "skipped": 0, "retries": 0,
+                    "warnings": []}
     if not windows:
-        return {"rows": 0, "calls": 0, "errors": 0}
+        return empty_result
 
-    all_rows, n_errors = [], 0
-    prog = st.progress(0)
+    all_rows = []
+    warnings = []            # human-facing notes, rendered AFTER the loop
+    discovery_calls = pricing_calls = 0
+    n_errors = n_empty = n_skipped = n_retries = 0
 
-    for i, w in enumerate(windows, 1):
-        prog.progress(
-            i / len(windows),
-            text=(
-                f"Fetching {WINDOW_DISPLAY[w['label']]}  "
-                f"{fmt_day(w['outbound_date'])} - {fmt_day(w['return_date'])}"
-            ),
-        )
-
-        # Throttle to avoid SerpApi rate limiting (2s between calls, not before the first).
-        if i > 1:
+    def _throttle():
+        # 2s between API calls (discovery or pricing), but not before the first.
+        if discovery_calls + pricing_calls > 0:
             time.sleep(2)
 
-        tag = (f"{i}/{len(windows)} {w['label']} {w['fri_date']} "
-               f"({w['outbound_date']} -> {w['return_date']})")
-        try:
-            raw = fetch_explore(w["outbound_date"], w["return_date"])
+    for w in windows:
+        fri  = w["fri_date"]
+        wtag = f"{w['label']} {fri} ({w['outbound_date']} -> {w['return_date']})"
 
-            # Rate-limited / failed calls come back as an error dict WITHOUT raising
-            # and WITHOUT a 'destinations' key — count them as errors instead of
-            # silently dropping the window.
-            if "error" in raw:
+        # Skip near-term weekends — discovery/pricing unreliable within a few days.
+        if is_near_term(w["outbound_date"], today):
+            n_skipped += 1
+            if debug:
+                print(f"[REFRESH] SKIP {wtag}: outbound within "
+                      f"{NEAR_TERM_SKIP_DAYS} days of today")
+            continue
+
+        # ---- Phase 1: discovery (one-way Explore) ----
+        _throttle()
+        try:
+            draw = discover_destinations(w["outbound_date"])
+        except Exception as exc:
+            discovery_calls += 1
+            n_errors += 1
+            warnings.append(f"Discovery error ({fri}): {exc}")
+            if debug:
+                print(f"[REFRESH] SKIP discovery {wtag}: EXCEPTION -> {exc}")
+            continue
+        discovery_calls += 1
+
+        dstatus, n_dest = explore_result_status(draw)
+        if dstatus == "error":
+            n_errors += 1
+            warnings.append(f"Discovery error ({fri}): {draw['error']}")
+            if debug:
+                print(f"[REFRESH] SKIP discovery {wtag}: ERROR -> {draw['error']}")
+            continue
+        if dstatus == "empty":
+            n_empty += 1
+            if debug:
+                print(f"[REFRESH] SKIP discovery {wtag}: 0 destinations returned")
+            continue
+
+        shortlist = _shortlist_from_discovery(draw)
+        if debug:
+            print(f"[REFRESH] OK   discovery {wtag}: {n_dest} destinations -> "
+                  f"shortlist {[d['iata'] for d in shortlist]}")
+
+        # ---- Phase 2: pricing (google_flights per shortlist destination) ----
+        for d in shortlist:
+            _throttle()
+            ptag = f"{w['label']} {fri} {d['iata']}"
+            try:
+                raw, status, attempts = fetch_with_retry(
+                    lambda d=d: fetch_flights(w["outbound_date"], w["return_date"], d["iata"]),
+                    classify=flights_result_status,
+                    retries=RETRY_ON_EMPTY, sleep_s=2, debug=debug, tag=ptag,
+                )
+            except Exception as exc:
+                pricing_calls += 1
                 n_errors += 1
+                warnings.append(f"Pricing error ({fri} {d['iata']}): {exc}")
                 if debug:
-                    print(f"[REFRESH] {tag}: API ERROR -> {raw['error']}")
-                st.warning(f"API error ({w['label']} {w['fri_date']}): {raw['error']}")
+                    print(f"[REFRESH] SKIP pricing {ptag}: EXCEPTION -> {exc}")
                 continue
 
-            n_dest = len(raw.get("destinations", []))
-            rows   = parse_explore_results(raw, w["fri_date"], w["label"], fetched_at)
+            pricing_calls += attempts
+            n_retries     += attempts - 1
+
+            if status == "error":
+                n_errors += 1
+                warnings.append(f"Pricing error ({fri} {d['iata']}): {raw.get('error')}")
+                if debug:
+                    print(f"[REFRESH] SKIP pricing {ptag}: ERROR -> {raw.get('error')}")
+                continue
+            if status == "empty":
+                n_empty += 1
+                if debug:
+                    print(f"[REFRESH] SKIP pricing {ptag}: empty after {attempts} attempts")
+                continue
+
+            rows = parse_flights_results(
+                raw, fri, w["label"], d["iata"], d["city"], d["country"], fetched_at)
             if debug:
-                print(f"[REFRESH] {tag}: {n_dest} destinations returned, "
-                      f"{len(rows)} rows after filters -> inserting")
+                price = rows[0]["price_usd_2pax"] if rows else None
+                print(f"[REFRESH] OK   pricing {ptag}: {len(rows)} row(s)"
+                      + (f" @ ${price:,.0f}" if rows else " (no qualifying itinerary)"))
             all_rows.extend(rows)
-        except Exception as exc:
-            n_errors += 1
-            if debug:
-                print(f"[REFRESH] {tag}: EXCEPTION -> {exc}")
-            st.warning(f"Error ({w['label']} {w['fri_date']}): {exc}")
 
-    prog.empty()
-
-    # Always record the fetch, even when zero rows came back (e.g. everything was
-    # rate-limited) — otherwise fetch_log silently misses the run entirely.
+    # Persist — reached unconditionally because nothing above can be interrupted.
     conn = get_conn()
     if all_rows:
         insert_flights(all_rows, conn=conn)
+    note_bits = []
+    if n_errors:  note_bits.append(f"{n_errors} errors")
+    if n_empty:   note_bits.append(f"{n_empty} empty")
+    if n_retries: note_bits.append(f"{n_retries} retries")
+    if n_skipped: note_bits.append(f"{n_skipped} skipped (near-term)")
     log_fetch(
         {
             "fetched_at":       fetched_at,
-            "weekends_fetched": len({w["fri_date"] for w in windows}),
-            "calls_made":       len(windows) - n_errors,
+            "weekends_fetched": len({r["window_fri_date"] for r in all_rows}),
+            "calls_made":       discovery_calls + pricing_calls,
             "status":           "success" if not n_errors else "partial",
-            "notes":            f"{n_errors} errors" if n_errors else None,
+            "notes":            ", ".join(note_bits) or None,
         },
         conn=conn,
     )
@@ -391,9 +497,37 @@ def do_refresh(debug: bool = False) -> dict:
 
     if debug:
         print(f"[REFRESH] done: {len(all_rows)} rows, "
-              f"{len(windows)} calls, {n_errors} errors")
+              f"{discovery_calls} discovery + {pricing_calls} pricing calls, "
+              f"{n_errors} errors, {n_empty} empty, {n_retries} retries, "
+              f"{n_skipped} skipped")
 
-    return {"rows": len(all_rows), "calls": len(windows), "errors": n_errors}
+    return {"rows": len(all_rows),
+            "discovery_calls": discovery_calls, "pricing_calls": pricing_calls,
+            "errors": n_errors, "empty": n_empty, "skipped": n_skipped,
+            "retries": n_retries, "warnings": warnings}
+
+
+def _build_refresh_msg(r: dict) -> str:
+    """Compose the success/info banner shown after a refresh completes."""
+    total = r["discovery_calls"] + r["pricing_calls"]
+    if r["rows"]:
+        msg   = (f"Fetched {r['rows']} roundtrip prices · "
+                 f"{r['discovery_calls']} discovery + {r['pricing_calls']} pricing calls.")
+        extra = []
+        if r["retries"]: extra.append(f"{r['retries']} retries")
+        if r["empty"]:   extra.append(f"{r['empty']} empty")
+        if r["errors"]:  extra.append(f"{r['errors']} errors")
+        if r["skipped"]: extra.append(f"{r['skipped']} skipped (near-term)")
+        if extra:
+            msg += "  (" + ", ".join(extra) + ")"
+        return msg
+    if total == 0:
+        if r["skipped"]:
+            return (f"No prices fetched — all {r['skipped']} weekends skipped "
+                    "(departures too near-term).")
+        return "No upcoming weekends to fetch — season may be over."
+    return ("No roundtrip prices returned — discovery or pricing came back empty. "
+            "Check your SERPAPI_KEY / quota.")
 
 
 # ── Header ────────────────────────────────────────────────────────────────────
@@ -416,21 +550,21 @@ st.divider()
 
 # ── Handle refresh click ───────────────────────────────────────────────────────
 if refresh_btn:
-    result = do_refresh(debug=debug_mode)
-    if result["rows"]:
-        msg = f"Fetched {result['rows']} prices across {result['calls']} API calls."
-        if result["errors"]:
-            msg += f" ({result['errors']} errors — see warnings above.)"
-    elif result["calls"] == 0:
-        msg = "No upcoming windows to fetch — season may be over."
-    else:
-        msg = "No prices returned. Check your SERPAPI_KEY in .env."
-    st.session_state.refresh_msg = msg
+    with st.spinner("Fetching roundtrip prices — this may take a few minutes"):
+        result = do_refresh(debug=debug_mode)
+        # Store results here, inside the spinner, BEFORE any further st.* call:
+        # plain session_state assignment is not an interruption point, so a rerun
+        # queued by a sidebar click can't drop the just-completed refresh.
+        st.session_state.refresh_msg      = _build_refresh_msg(result)
+        st.session_state.refresh_warnings = result["warnings"]
     st.rerun()
 
 if st.session_state.refresh_msg:
     st.success(st.session_state.refresh_msg)
     st.session_state.refresh_msg = None
+for _warn in st.session_state.refresh_warnings:
+    st.warning(_warn)
+st.session_state.refresh_warnings = []
 
 
 # ── Active Fridays (used by both tabs) ────────────────────────────────────────

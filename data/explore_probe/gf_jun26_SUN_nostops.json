@@ -1,0 +1,29 @@
+{
+  "search_metadata": {
+    "id": "6a28cd38bf04d5721cb9e822",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/lsZKrjaa-FVi5sNbI-N6_A/6a28cd38bf04d5721cb9e822.json",
+    "created_at": "2026-06-10 02:34:32 UTC",
+    "processed_at": "2026-06-10 02:34:32 UTC",
+    "google_flights_url": "https://www.google.com/travel/flights?hl=en&gl=us&curr=USD&tfs=CBwQAhoeEgoyMDI2LTA2LTI2agcIARIDUk1PcgcIARIDQVRIGh4SCjIwMjYtMDYtMjhqBwgBEgNBVEhyBwgBEgNSTU9AAUABSAFwAZgBAQ&tfu=EgIIAQ",
+    "raw_html_file": "https://serpapi.com/searches/lsZKrjaa-FVi5sNbI-N6_A/6a28cd38bf04d5721cb9e822.html",
+    "prettify_html_file": "https://serpapi.com/searches/lsZKrjaa-FVi5sNbI-N6_A/6a28cd38bf04d5721cb9e822.prettify",
+    "total_time_taken": 7.8
+  },
+  "search_parameters": {
+    "engine": "google_flights",
+    "hl": "en",
+    "gl": "us",
+    "type": "1",
+    "departure_id": "RMO",
+    "arrival_id": "ATH",
+    "outbound_date": "2026-06-26",
+    "return_date": "2026-06-28",
+    "adults": 2,
+    "currency": "USD"
+  },
+  "search_information": {
+    "flights_results_state": "Fully empty"
+  },
+  "error": "Google Flights hasn't returned any results for this query."
+}

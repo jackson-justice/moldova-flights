@@ -1,0 +1,29 @@
+{
+  "search_metadata": {
+    "id": "6a28c994abe7eccd6e534361",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/lKGHNvDnbnrtP1SB3j8DcA/6a28c994abe7eccd6e534361.json",
+    "created_at": "2026-06-10 02:19:00 UTC",
+    "processed_at": "2026-06-10 02:19:00 UTC",
+    "google_travel_explore_url": "https://www.google.com/travel/explore?hl=en&gl=us&curr=USD&tfs=CBwQAxoVEgoyMDI2LTA2LTE5agcIARIDUk1PGhUSCjIwMjYtMDYtMjFyBwgBEgNSTU9AAUABSAFwAYIBCwj___________8BmAEB",
+    "raw_html_file": "https://serpapi.com/searches/lKGHNvDnbnrtP1SB3j8DcA/6a28c994abe7eccd6e534361.html",
+    "prettify_html_file": "https://serpapi.com/searches/lKGHNvDnbnrtP1SB3j8DcA/6a28c994abe7eccd6e534361.prettify",
+    "total_time_taken": 0.86
+  },
+  "search_parameters": {
+    "engine": "google_travel_explore",
+    "hl": "en",
+    "gl": "us",
+    "type": "1",
+    "departure_id": "RMO",
+    "outbound_date": "2026-06-19",
+    "return_date": "2026-06-21",
+    "adults": 2,
+    "stops": 2,
+    "currency": "USD"
+  },
+  "search_information": {
+    "organic_results_state": "Fully empty"
+  },
+  "error": "Empty results for departure_id: \"RMO\"."
+}

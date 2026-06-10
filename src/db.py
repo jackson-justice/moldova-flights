@@ -3,14 +3,17 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
+from src.config import SCHEMA_VERSION
+
 DB_PATH = Path(__file__).parent.parent / "data" / "flights.db"
 
-_SCHEMA = """
-CREATE TABLE IF NOT EXISTS flights (
+# Column DDL for the flights table — single source of truth, reused by both the
+# normal create and the migration rebuild (CREATE TABLE flights_new ...).
+_FLIGHTS_COLS = """
     id                    INTEGER PRIMARY KEY AUTOINCREMENT,
     fetched_at            DATETIME NOT NULL,
-    window_fri_date       DATE NOT NULL,
-    window_type           TEXT NOT NULL,        -- 'fri_sun', 'thu_sun', 'fri_mon', 'thu_mon'
+    window_fri_date       DATE NOT NULL,        -- 'fri_sun', 'thu_sun', 'fri_mon', 'thu_mon'
+    window_type           TEXT NOT NULL,
     outbound_date         DATE NOT NULL,
     return_date           DATE NOT NULL,
     destination_iata      TEXT NOT NULL,
@@ -18,11 +21,28 @@ CREATE TABLE IF NOT EXISTS flights (
     destination_country   TEXT NOT NULL,
     price_usd_2pax        REAL NOT NULL,        -- total for 2 people, roundtrip, USD
     outbound_stops        INTEGER NOT NULL,
-    return_stops          INTEGER NOT NULL,
+    return_stops          INTEGER,              -- nullable: v1 google_flights pricing has no return-leg detail
     outbound_duration_min INTEGER,
     return_duration_min   INTEGER,
     airline               TEXT,
-    booking_link          TEXT
+    booking_link          TEXT,
+    price_source          TEXT,                 -- 'google_flights' | 'explore' | NULL (legacy)
+    departure_token       TEXT
+"""
+
+# Ordered column names — keep in sync with _FLIGHTS_COLS. Used by the migration
+# copy to select the intersection of old and new columns.
+_FLIGHTS_COLUMN_NAMES = [
+    "id", "fetched_at", "window_fri_date", "window_type", "outbound_date",
+    "return_date", "destination_iata", "destination_city", "destination_country",
+    "price_usd_2pax", "outbound_stops", "return_stops", "outbound_duration_min",
+    "return_duration_min", "airline", "booking_link", "price_source",
+    "departure_token",
+]
+
+_SCHEMA = f"""
+CREATE TABLE IF NOT EXISTS flights (
+{_FLIGHTS_COLS}
 );
 
 CREATE TABLE IF NOT EXISTS fetch_log (
@@ -48,16 +68,29 @@ INSERT INTO flights (
     destination_iata, destination_city, destination_country,
     price_usd_2pax, outbound_stops, return_stops,
     outbound_duration_min, return_duration_min,
-    airline, booking_link
+    airline, booking_link, price_source, departure_token
 ) VALUES (
     :fetched_at, :window_fri_date, :window_type,
     :outbound_date, :return_date,
     :destination_iata, :destination_city, :destination_country,
     :price_usd_2pax, :outbound_stops, :return_stops,
     :outbound_duration_min, :return_duration_min,
-    :airline, :booking_link
+    :airline, :booking_link, :price_source, :departure_token
 )
 """
+
+# Optional flight columns default to NULL when a row dict omits them, so both the
+# Explore parser (no price_source/departure_token) and the google_flights parser
+# (full set) can be inserted through the same statement.
+_FLIGHT_OPTIONAL_DEFAULTS = {
+    "return_stops":          None,
+    "outbound_duration_min": None,
+    "return_duration_min":   None,
+    "airline":               None,
+    "booking_link":          None,
+    "price_source":          None,
+    "departure_token":       None,
+}
 
 _INSERT_LOG = """
 INSERT INTO fetch_log (fetched_at, weekends_fetched, calls_made, status, notes)
@@ -74,10 +107,50 @@ def get_conn(path: Path = None) -> sqlite3.Connection:
     return conn
 
 
+def _migrate_flights(conn: sqlite3.Connection) -> None:
+    """
+    Rebuild an existing legacy `flights` table to the current schema using the
+    create-new / copy-compatible-columns / drop / rename pattern.
+
+    No-op when there is no flights table (fresh DB) or it already has the new
+    columns. Indexes are recreated afterwards by the _SCHEMA executescript.
+    """
+    exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='flights'"
+    ).fetchone()
+    if not exists:
+        return
+
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(flights)")}
+    if {"price_source", "departure_token"} <= cols:
+        return  # already on the new schema
+
+    conn.execute("DROP TABLE IF EXISTS flights_new")
+    conn.execute(f"CREATE TABLE flights_new ({_FLIGHTS_COLS})")
+
+    # Copy only columns present in both old and new schemas.
+    compatible = [c for c in _FLIGHTS_COLUMN_NAMES if c in cols]
+    collist = ", ".join(compatible)
+    conn.execute(
+        f"INSERT INTO flights_new ({collist}) SELECT {collist} FROM flights"
+    )
+    conn.execute("DROP TABLE flights")
+    conn.execute("ALTER TABLE flights_new RENAME TO flights")
+
+
 def init_db(path: Path = None) -> None:
-    """Create tables and indexes if they don't already exist."""
+    """
+    Create tables/indexes if missing, and migrate the flights table when the DB's
+    schema version is behind SCHEMA_VERSION.
+    """
     with get_conn(path) as conn:
-        conn.executescript(_SCHEMA)
+        version = conn.execute("PRAGMA user_version").fetchone()[0]
+        if version != SCHEMA_VERSION:
+            _migrate_flights(conn)                 # rebuild legacy table if present
+            conn.executescript(_SCHEMA)            # create any missing tables/indexes
+            conn.execute(f"PRAGMA user_version = {int(SCHEMA_VERSION)}")
+        else:
+            conn.executescript(_SCHEMA)            # idempotent ensure-exists
 
 
 def insert_flights(rows: list, conn: sqlite3.Connection = None) -> int:
@@ -87,6 +160,10 @@ def insert_flights(rows: list, conn: sqlite3.Connection = None) -> int:
     """
     if not rows:
         return 0
+
+    # Fill any omitted optional columns with NULL so the Explore parser (which has
+    # no price_source/departure_token) and the google_flights parser both insert.
+    rows = [{**_FLIGHT_OPTIONAL_DEFAULTS, **r} for r in rows]
 
     close = conn is None
     if close:

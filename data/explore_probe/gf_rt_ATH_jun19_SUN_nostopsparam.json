@@ -1,0 +1,879 @@
+{
+  "search_metadata": {
+    "id": "6a28ccf49b762d0510a06d4f",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/rlDTh4ibucGfQyE-P777Dg/6a28ccf49b762d0510a06d4f.json",
+    "created_at": "2026-06-10 02:33:24 UTC",
+    "processed_at": "2026-06-10 02:33:24 UTC",
+    "google_flights_url": "https://www.google.com/travel/flights?hl=en&gl=us&curr=USD&tfs=CBwQAhoeEgoyMDI2LTA2LTE5agcIARIDUk1PcgcIARIDQVRIGh4SCjIwMjYtMDYtMjFqBwgBEgNBVEhyBwgBEgNSTU9AAUABSAFwAZgBAQ&tfu=EgIIAQ",
+    "raw_html_file": "https://serpapi.com/searches/rlDTh4ibucGfQyE-P777Dg/6a28ccf49b762d0510a06d4f.html",
+    "prettify_html_file": "https://serpapi.com/searches/rlDTh4ibucGfQyE-P777Dg/6a28ccf49b762d0510a06d4f.prettify",
+    "total_time_taken": 4.01
+  },
+  "search_parameters": {
+    "engine": "google_flights",
+    "hl": "en",
+    "gl": "us",
+    "type": "1",
+    "departure_id": "RMO",
+    "arrival_id": "ATH",
+    "outbound_date": "2026-06-19",
+    "return_date": "2026-06-21",
+    "adults": 2,
+    "currency": "USD"
+  },
+  "best_flights": [
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 08:45"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-19 11:00"
+          },
+          "duration": 135,
+          "airplane": "Boeing 737",
+          "airline": "SkyUp MT",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/U5.png",
+          "travel_class": "Economy",
+          "flight_number": "U5 351",
+          "extensions": [
+            "Carbon emissions estimate: 248 kg"
+          ]
+        }
+      ],
+      "total_duration": 135,
+      "carbon_emissions": {
+        "this_flight": 249000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 14
+      },
+      "price": 594,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/U5.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ1ZWTlRNMU1Sb0xDT1RQQXhBQ0dnTlZVMFE0SEhEa3p3TT0iLFtbIlJNTyIsIjIwMjYtMDYtMTkiLCJBVEgiLG51bGwsIlU1IiwiMzUxIl1dXQ=="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 03:35"
+          },
+          "arrival_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-19 05:15"
+          },
+          "duration": 100,
+          "airplane": "Airbus A321neo",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 276",
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "Wi-Fi for a fee",
+            "In-seat USB outlet",
+            "On-demand video",
+            "Carbon emissions estimate: 134 kg"
+          ],
+          "overnight": true
+        },
+        {
+          "departure_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-19 13:05"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-19 14:35"
+          },
+          "duration": 90,
+          "airplane": "Airbus A330",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 1849",
+          "legroom": "31 in",
+          "extensions": [
+            "Average legroom (31 in)",
+            "Wi-Fi for a fee",
+            "In-seat power & USB outlets",
+            "On-demand video",
+            "Carbon emissions estimate: 160 kg"
+          ]
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 470,
+          "name": "Istanbul Airport",
+          "id": "IST"
+        }
+      ],
+      "total_duration": 660,
+      "carbon_emissions": {
+        "this_flight": 295000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 35
+      },
+      "price": 722,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3hVU3pJM05ueFVTekU0TkRrYUN3aUF0QVFRQWhvRFZWTkVPQnh3Z0xRRSIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIklTVCIsbnVsbCwiVEsiLCIyNzYiXSxbIklTVCIsIjIwMjYtMDYtMTkiLCJBVEgiLG51bGwsIlRLIiwiMTg0OSJdXV0="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 21:10"
+          },
+          "arrival_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-19 22:45"
+          },
+          "duration": 95,
+          "airplane": "Boeing 737",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 272",
+          "legroom": "31 in",
+          "extensions": [
+            "Average legroom (31 in)",
+            "Wi-Fi for a fee",
+            "In-seat USB outlet",
+            "On-demand video",
+            "Carbon emissions estimate: 171 kg"
+          ]
+        },
+        {
+          "departure_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-20 01:40"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-20 03:05"
+          },
+          "duration": 85,
+          "airplane": "Airbus A321neo",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 1841",
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "Wi-Fi for a fee",
+            "In-seat USB outlet",
+            "On-demand video",
+            "Carbon emissions estimate: 125 kg"
+          ],
+          "overnight": true
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 175,
+          "name": "Istanbul Airport",
+          "id": "IST"
+        }
+      ],
+      "total_duration": 355,
+      "carbon_emissions": {
+        "this_flight": 297000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 36
+      },
+      "price": 757,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3hVU3pJM01ueFVTekU0TkRFYUN3aXJ6d1FRQWhvRFZWTkVPQnh3cTg4RSIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIklTVCIsbnVsbCwiVEsiLCIyNzIiXSxbIklTVCIsIjIwMjYtMDYtMjAiLCJBVEgiLG51bGwsIlRLIiwiMTg0MSJdXV0="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 06:30"
+          },
+          "arrival_airport": {
+            "name": "Vienna International Airport",
+            "id": "VIE",
+            "time": "2026-06-19 07:10"
+          },
+          "duration": 100,
+          "airplane": "Airbus A220-300 Passenger",
+          "airline": "Austrian",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/OS.png",
+          "travel_class": "Economy",
+          "flight_number": "OS 720",
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "Carbon emissions estimate: 208 kg"
+          ],
+          "plane_and_crew_by": "Air Baltic"
+        },
+        {
+          "departure_airport": {
+            "name": "Vienna International Airport",
+            "id": "VIE",
+            "time": "2026-06-19 09:35"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-19 12:45"
+          },
+          "duration": 130,
+          "airplane": "Airbus A320",
+          "airline": "Austrian",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/OS.png",
+          "travel_class": "Economy",
+          "flight_number": "OS 801",
+          "legroom": "28 in",
+          "extensions": [
+            "Below average legroom (28 in)",
+            "In-seat USB outlet",
+            "Carbon emissions estimate: 243 kg"
+          ]
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 145,
+          "name": "Vienna International Airport",
+          "id": "VIE"
+        }
+      ],
+      "total_duration": 375,
+      "carbon_emissions": {
+        "this_flight": 452000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 107
+      },
+      "price": 902,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/OS.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3RQVXpjeU1IeFBVemd3TVJvTENLVEFCUkFDR2dOVlUwUTRISENrd0FVPSIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIlZJRSIsbnVsbCwiT1MiLCI3MjAiXSxbIlZJRSIsIjIwMjYtMDYtMTkiLCJBVEgiLG51bGwsIk9TIiwiODAxIl1dXQ=="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 03:35"
+          },
+          "arrival_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-19 05:15"
+          },
+          "duration": 100,
+          "airplane": "Airbus A321neo",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 276",
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "Wi-Fi for a fee",
+            "In-seat USB outlet",
+            "On-demand video",
+            "Carbon emissions estimate: 134 kg"
+          ],
+          "overnight": true
+        },
+        {
+          "departure_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-19 07:25"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-19 08:55"
+          },
+          "duration": 90,
+          "airplane": "Boeing 777",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 1843",
+          "legroom": "31 in",
+          "extensions": [
+            "Average legroom (31 in)",
+            "Wi-Fi for a fee",
+            "In-seat power & USB outlets",
+            "On-demand video",
+            "Carbon emissions estimate: 152 kg"
+          ]
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 130,
+          "name": "Istanbul Airport",
+          "id": "IST"
+        }
+      ],
+      "total_duration": 320,
+      "carbon_emissions": {
+        "this_flight": 287000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 32
+      },
+      "price": 944,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3hVU3pJM05ueFVTekU0TkRNYUN3aVA0UVVRQWhvRFZWTkVPQnh3aitFRiIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIklTVCIsbnVsbCwiVEsiLCIyNzYiXSxbIklTVCIsIjIwMjYtMDYtMTkiLCJBVEgiLG51bGwsIlRLIiwiMTg0MyJdXV0="
+    }
+  ],
+  "other_flights": [
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 21:10"
+          },
+          "arrival_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-19 22:45"
+          },
+          "duration": 95,
+          "airplane": "Boeing 737",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 272",
+          "legroom": "31 in",
+          "extensions": [
+            "Average legroom (31 in)",
+            "Wi-Fi for a fee",
+            "In-seat USB outlet",
+            "On-demand video",
+            "Carbon emissions estimate: 171 kg"
+          ]
+        },
+        {
+          "departure_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-20 13:05"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-20 14:35"
+          },
+          "duration": 90,
+          "airplane": "Airbus A330",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 1849",
+          "legroom": "31 in",
+          "extensions": [
+            "Average legroom (31 in)",
+            "Wi-Fi for a fee",
+            "In-seat power & USB outlets",
+            "On-demand video",
+            "Carbon emissions estimate: 149 kg"
+          ]
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 860,
+          "name": "Istanbul Airport",
+          "id": "IST",
+          "overnight": true
+        }
+      ],
+      "total_duration": 1045,
+      "carbon_emissions": {
+        "this_flight": 321000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 47
+      },
+      "price": 742,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3hVU3pJM01ueFVTekU0TkRrYUN3ajl3Z1FRQWhvRFZWTkVPQnh3L2NJRSIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIklTVCIsbnVsbCwiVEsiLCIyNzIiXSxbIklTVCIsIjIwMjYtMDYtMjAiLCJBVEgiLG51bGwsIlRLIiwiMTg0OSJdXV0="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 04:35"
+          },
+          "arrival_airport": {
+            "name": "Bucharest Henri Coand\u0103 International Airport",
+            "id": "OTP",
+            "time": "2026-06-19 05:50"
+          },
+          "duration": 75,
+          "airplane": "ATR 72",
+          "airline": "TAROM",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/RO.png",
+          "travel_class": "Economy",
+          "flight_number": "RO 210",
+          "legroom": "29 in",
+          "extensions": [
+            "Below average legroom (29 in)",
+            "Carbon emissions estimate: 79 kg"
+          ],
+          "overnight": true
+        },
+        {
+          "departure_airport": {
+            "name": "Bucharest Henri Coand\u0103 International Airport",
+            "id": "OTP",
+            "time": "2026-06-19 12:20"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-19 14:00"
+          },
+          "duration": 100,
+          "airplane": "Boeing 737",
+          "airline": "TAROM",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/RO.png",
+          "travel_class": "Economy",
+          "flight_number": "RO 273",
+          "legroom": "29 in",
+          "extensions": [
+            "Below average legroom (29 in)",
+            "Carbon emissions estimate: 164 kg"
+          ],
+          "often_delayed_by_over_30_min": true
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 390,
+          "name": "Bucharest Henri Coand\u0103 International Airport",
+          "id": "OTP"
+        }
+      ],
+      "total_duration": 565,
+      "carbon_emissions": {
+        "this_flight": 244000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 12
+      },
+      "price": 828,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/RO.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3RTVHpJeE1IeFNUekkzTXhvTENLT0dCUkFDR2dOVlUwUTRISENqaGdVPSIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIk9UUCIsbnVsbCwiUk8iLCIyMTAiXSxbIk9UUCIsIjIwMjYtMDYtMTkiLCJBVEgiLG51bGwsIlJPIiwiMjczIl1dXQ=="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 16:15"
+          },
+          "arrival_airport": {
+            "name": "Vienna International Airport",
+            "id": "VIE",
+            "time": "2026-06-19 16:55"
+          },
+          "duration": 100,
+          "airplane": "Airbus A220-300 Passenger",
+          "airline": "Austrian",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/OS.png",
+          "travel_class": "Economy",
+          "flight_number": "OS 718",
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "Carbon emissions estimate: 208 kg"
+          ],
+          "plane_and_crew_by": "Air Baltic"
+        },
+        {
+          "departure_airport": {
+            "name": "Vienna International Airport",
+            "id": "VIE",
+            "time": "2026-06-19 20:35"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-19 23:40"
+          },
+          "duration": 125,
+          "airplane": "Airbus A320",
+          "airline": "Austrian",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/OS.png",
+          "travel_class": "Economy",
+          "flight_number": "OS 805",
+          "legroom": "28 in",
+          "extensions": [
+            "Below average legroom (28 in)",
+            "In-seat USB outlet",
+            "Carbon emissions estimate: 243 kg"
+          ]
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 220,
+          "name": "Vienna International Airport",
+          "id": "VIE"
+        }
+      ],
+      "total_duration": 445,
+      "carbon_emissions": {
+        "this_flight": 452000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 107
+      },
+      "price": 830,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/OS.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3RQVXpjeE9IeFBVemd3TlJvTENOeUhCUkFDR2dOVlUwUTRISERjaHdVPSIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIlZJRSIsbnVsbCwiT1MiLCI3MTgiXSxbIlZJRSIsIjIwMjYtMDYtMTkiLCJBVEgiLG51bGwsIk9TIiwiODA1Il1dXQ=="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 19:45"
+          },
+          "arrival_airport": {
+            "name": "Bucharest Henri Coand\u0103 International Airport",
+            "id": "OTP",
+            "time": "2026-06-19 21:00"
+          },
+          "duration": 75,
+          "airplane": "ATR 72",
+          "airline": "TAROM",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/RO.png",
+          "travel_class": "Economy",
+          "flight_number": "RO 208",
+          "legroom": "29 in",
+          "extensions": [
+            "Below average legroom (29 in)",
+            "Carbon emissions estimate: 79 kg"
+          ]
+        },
+        {
+          "departure_airport": {
+            "name": "Bucharest Henri Coand\u0103 International Airport",
+            "id": "OTP",
+            "time": "2026-06-20 06:30"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-20 08:55"
+          },
+          "duration": 145,
+          "airplane": "ATR 72",
+          "airline": "TAROM",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/RO.png",
+          "travel_class": "Economy",
+          "flight_number": "RO 271",
+          "legroom": "29 in",
+          "extensions": [
+            "Below average legroom (29 in)",
+            "Carbon emissions estimate: 157 kg"
+          ]
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 570,
+          "name": "Bucharest Henri Coand\u0103 International Airport",
+          "id": "OTP",
+          "overnight": true
+        }
+      ],
+      "total_duration": 790,
+      "carbon_emissions": {
+        "this_flight": 237000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 9
+      },
+      "price": 898,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/RO.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3RTVHpJd09IeFNUekkzTVJvTENQbThCUkFDR2dOVlUwUTRISEQ1dkFVPSIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIk9UUCIsbnVsbCwiUk8iLCIyMDgiXSxbIk9UUCIsIjIwMjYtMDYtMjAiLCJBVEgiLG51bGwsIlJPIiwiMjcxIl1dXQ=="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 16:15"
+          },
+          "arrival_airport": {
+            "name": "Vienna International Airport",
+            "id": "VIE",
+            "time": "2026-06-19 16:55"
+          },
+          "duration": 100,
+          "airplane": "Airbus A220-300 Passenger",
+          "airline": "Austrian",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/OS.png",
+          "travel_class": "Economy",
+          "flight_number": "OS 718",
+          "ticket_also_sold_by": [
+            "Lufthansa"
+          ],
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "Carbon emissions estimate: 208 kg"
+          ],
+          "plane_and_crew_by": "Air Baltic"
+        },
+        {
+          "departure_airport": {
+            "name": "Vienna International Airport",
+            "id": "VIE",
+            "time": "2026-06-19 17:40"
+          },
+          "arrival_airport": {
+            "name": "Munich International Airport",
+            "id": "MUC",
+            "time": "2026-06-19 18:40"
+          },
+          "duration": 60,
+          "airplane": "Embraer 195",
+          "airline": "Austrian",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/OS.png",
+          "travel_class": "Economy",
+          "flight_number": "OS 187",
+          "ticket_also_sold_by": [
+            "Lufthansa"
+          ],
+          "legroom": "29 in",
+          "extensions": [
+            "Below average legroom (29 in)",
+            "Carbon emissions estimate: 128 kg"
+          ]
+        },
+        {
+          "departure_airport": {
+            "name": "Munich International Airport",
+            "id": "MUC",
+            "time": "2026-06-19 19:30"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-19 23:05"
+          },
+          "duration": 155,
+          "airplane": "Airbus A320",
+          "airline": "Lufthansa",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/LH.png",
+          "travel_class": "Economy",
+          "flight_number": "LH 1756",
+          "ticket_also_sold_by": [
+            "Aegean"
+          ],
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "Carbon emissions estimate: 269 kg"
+          ]
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 45,
+          "name": "Vienna International Airport",
+          "id": "VIE"
+        },
+        {
+          "duration": 50,
+          "name": "Munich International Airport",
+          "id": "MUC"
+        }
+      ],
+      "total_duration": 410,
+      "carbon_emissions": {
+        "this_flight": 607000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 178
+      },
+      "price": 1110,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/multi.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFaEpQVXpjeE9IeFBVekU0TjN4TVNERTNOVFlhQ3dqMzRnWVFBaG9EVlZORU9CeHc5K0lHIixbWyJSTU8iLCIyMDI2LTA2LTE5IiwiVklFIixudWxsLCJPUyIsIjcxOCJdLFsiVklFIiwiMjAyNi0wNi0xOSIsIk1VQyIsbnVsbCwiT1MiLCIxODciXSxbIk1VQyIsIjIwMjYtMDYtMTkiLCJBVEgiLG51bGwsIkxIIiwiMTc1NiJdXV0="
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Chi\u0219in\u0103u International Airport",
+            "id": "RMO",
+            "time": "2026-06-19 16:00"
+          },
+          "arrival_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-19 17:40"
+          },
+          "duration": 100,
+          "airplane": "Boeing 737",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 274",
+          "legroom": "31 in",
+          "extensions": [
+            "Average legroom (31 in)",
+            "Wi-Fi for a fee",
+            "In-seat USB outlet",
+            "On-demand video",
+            "Carbon emissions estimate: 171 kg"
+          ]
+        },
+        {
+          "departure_airport": {
+            "name": "Istanbul Airport",
+            "id": "IST",
+            "time": "2026-06-19 18:55"
+          },
+          "arrival_airport": {
+            "name": "Athens International Airport \"Eleftherios Venizelos\"",
+            "id": "ATH",
+            "time": "2026-06-19 20:30"
+          },
+          "duration": 95,
+          "airplane": "Boeing 777",
+          "airline": "Turkish Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+          "travel_class": "Economy",
+          "flight_number": "TK 1845",
+          "legroom": "31 in",
+          "extensions": [
+            "Average legroom (31 in)",
+            "Wi-Fi for a fee",
+            "In-seat power & USB outlets",
+            "On-demand video",
+            "Carbon emissions estimate: 152 kg"
+          ]
+        }
+      ],
+      "layovers": [
+        {
+          "duration": 75,
+          "name": "Istanbul Airport",
+          "id": "IST"
+        }
+      ],
+      "total_duration": 270,
+      "carbon_emissions": {
+        "this_flight": 324000,
+        "typical_for_this_route": 218000,
+        "difference_percent": 49
+      },
+      "price": 1457,
+      "type": "Round trip",
+      "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TK.png",
+      "departure_token": "WyJDalJJVG05UlRuRmxMVTl2ZWtGQlFrY3RaMmRDUnkwdExTMHRMUzB0TFMxNWJHbDZNVUZCUVVGQlIyOXZlbEJqVFZBeFdqaEJFZ3hVU3pJM05IeFVTekU0TkRVYUN3aUM4Z2dRQWhvRFZWTkVPQnh3Z3ZJSSIsW1siUk1PIiwiMjAyNi0wNi0xOSIsIklTVCIsbnVsbCwiVEsiLCIyNzQiXSxbIklTVCIsIjIwMjYtMDYtMTkiLCJBVEgiLG51bGwsIlRLIiwiMTg0NSJdXV0="
+    }
+  ],
+  "price_insights": {
+    "lowest_price": 594,
+    "price_level": "high",
+    "typical_price_range": [
+      295,
+      590
+    ]
+  },
+  "airports": [
+    {
+      "departure": [
+        {
+          "airport": {
+            "id": "RMO",
+            "name": "Chi\u0219in\u0103u International Airport"
+          },
+          "city": "Chi\u0219in\u0103u",
+          "country": "Moldova",
+          "country_code": "MD",
+          "image": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRuwX6tNQM0k5edeDDrXAnU7Hzy7-mAp9AGs7a4vncQ6sxI5uPw92O8HP2eJenrPwc2SYPnIo_YJu2cXA",
+          "thumbnail": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRECMq9bUQEpalwgPwcwl0K7mGoq5dRvzjSBrHSn648wzNuZEBY1zEHDQ6cTttV_KAViqZulzpfViiiZtUE2aRYauGxCKUqFFRJR7XCcME"
+        }
+      ],
+      "arrival": [
+        {
+          "airport": {
+            "id": "ATH",
+            "name": "Athens International Airport \"Eleftherios Venizelos\""
+          },
+          "city": "Athens",
+          "country": "Greece",
+          "country_code": "GR",
+          "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBT_DUJ4gR1mP40zFCP-KW9of6TX7NxVWoVk7hf5o0HoK97ZF8oIk6kUJTCu7WWw-BFX5hXs_8mWRgUg",
+          "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs-Ex9gz8-moHJSTgoFetAuLSGH_2QtFp73z9GHxtcLYOcyrRdN1qmAmR1RksiNjjxgo52-nWglvq83SzPeVoatsn119rfzh8ENurmfjM"
+        }
+      ]
+    },
+    {
+      "departure": [
+        {
+          "airport": {
+            "id": "ATH",
+            "name": "Athens International Airport \"Eleftherios Venizelos\""
+          },
+          "city": "Athens",
+          "country": "Greece",
+          "country_code": "GR",
+          "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBT_DUJ4gR1mP40zFCP-KW9of6TX7NxVWoVk7hf5o0HoK97ZF8oIk6kUJTCu7WWw-BFX5hXs_8mWRgUg",
+          "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs-Ex9gz8-moHJSTgoFetAuLSGH_2QtFp73z9GHxtcLYOcyrRdN1qmAmR1RksiNjjxgo52-nWglvq83SzPeVoatsn119rfzh8ENurmfjM"
+        }
+      ],
+      "arrival": [
+        {
+          "airport": {
+            "id": "RMO",
+            "name": "Chi\u0219in\u0103u International Airport"
+          },
+          "city": "Chi\u0219in\u0103u",
+          "country": "Moldova",
+          "country_code": "MD",
+          "image": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRuwX6tNQM0k5edeDDrXAnU7Hzy7-mAp9AGs7a4vncQ6sxI5uPw92O8HP2eJenrPwc2SYPnIo_YJu2cXA",
+          "thumbnail": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRECMq9bUQEpalwgPwcwl0K7mGoq5dRvzjSBrHSn648wzNuZEBY1zEHDQ6cTttV_KAViqZulzpfViiiZtUE2aRYauGxCKUqFFRJR7XCcME"
+        }
+      ]
+    }
+  ]
+}

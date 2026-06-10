@@ -37,3 +37,10 @@ SERPAPI_ADULTS   = 2
 
 # --- Flight constraints ---
 MAX_STOPS = 1
+
+# --- Database schema version ---
+# Bump whenever the flights/fetch_log schema changes. init_db() compares this to
+# the DB's PRAGMA user_version and rebuilds the flights table on mismatch.
+#   1 = original schema (return_stops NOT NULL, no price_source/departure_token)
+#   2 = google_flights hybrid: return_stops nullable + price_source + departure_token
+SCHEMA_VERSION = 2
