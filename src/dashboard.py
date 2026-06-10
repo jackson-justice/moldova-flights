@@ -4,6 +4,7 @@ Run from the project root:
     streamlit run src/dashboard.py
 """
 import sys
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -141,26 +142,132 @@ def cheapest_for_friday(
     return min(filtered, key=lambda r: r["price_usd_2pax"]) if filtered else None
 
 
+def windows_with_data_for_friday(fri_iso: str) -> list:
+    """
+    Window-type labels that have at least one row for this Friday, in any window.
+
+    Used so the Overview can distinguish 'no data at all' from 'data exists, just
+    not for the window type you're currently viewing' (e.g. Jun 26, which was only
+    fetched for thu_mon) — otherwise that data is invisible and looks like a bug.
+    """
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT window_type FROM flights WHERE window_fri_date = ?",
+            (fri_iso,),
+        ).fetchall()
+        present = {r[0] for r in rows}
+        # Return in canonical WINDOW_TYPES order for stable display
+        return [w["label"] for w in WINDOW_TYPES if w["label"] in present]
+    finally:
+        conn.close()
+
+
 # ── CSS ──────────────────────────────────────────────────────────────────────
+# Dark-mode palette. The app is pinned to the dark theme (.streamlit/config.toml),
+# so cards are dark elevated surfaces with light text and accents tuned for
+# contrast on the deep canvas. Every card element still sets an explicit color so
+# the look is stable regardless of the user's global Streamlit theme preference.
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --ink-900:#f1f4f9; --ink-700:#c3cad8; --ink-500:#8b94a7; --ink-400:#5f6b80;
+  --line:rgba(255,255,255,.09);
+  --card:#161d2b; --card-soft:#10151f;
+  --shadow:0 1px 2px rgba(0,0,0,.40), 0 6px 20px rgba(0,0,0,.34);
+  --shadow-hover:0 4px 10px rgba(0,0,0,.45), 0 18px 42px rgba(0,0,0,.50);
+  --radius:14px;
+  --great-accent:#34d399; --great-ink:#6ee7b7; --great-tint:rgba(52,211,153,.13);
+  --good-accent:#fbbf24;  --good-ink:#fcd34d;  --good-tint:rgba(251,191,36,.12);
+  --ok-accent:#7c8aa3;
+}
+
+/* Base typography + layout */
+html, body, [class*="css"] {
+  font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.block-container { padding-top:3.6rem; max-width:1180px; }
+
+/* Header hero — explicit font stack + weight so the title renders consistently
+   even when the webfont hasn't loaded yet. Generous line-height + padding so tall
+   ascenders (the 'l' in Flight, the 'k' in Tracker) are never clipped. */
+.hero-title { font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                          Roboto, Helvetica, Arial, sans-serif;
+              font-size:2.05rem; font-weight:700; letter-spacing:-.01em;
+              color:var(--ink-900); margin:0; padding-top:.15em; line-height:1.28;
+              -webkit-font-smoothing:antialiased; }
+.hero-sub   { font-size:.92rem; color:var(--ink-500); margin-top:.4rem; }
+.hero-sub b { color:var(--ink-700); font-weight:600; }
+.hero-dot   { display:inline-block; width:5px; height:5px; border-radius:50%;
+              background:var(--ink-400); margin:0 .6rem; vertical-align:middle; }
+
 /* Weekend cards */
-.pc            { border-radius:8px; padding:16px 18px 12px; margin-bottom:8px; line-height:1.35; }
-.t-great       { background:#d4edda; border-left:5px solid #28a745; }
-.t-good        { background:#fff3cd; border-left:5px solid #ffc107; }
-.t-ok          { background:#f8f9fa; border-left:5px solid #adb5bd; }
-.t-empty       { background:#f1f3f4; border-left:5px solid #dee2e6; color:#999; }
-.c-date        { font-size:.82em; color:#666; margin:0 0 3px; }
-.c-price       { font-size:1.95em; font-weight:700; margin:2px 0 5px; line-height:1.05; }
-.c-dest        { font-size:1.05em; margin:0 0 4px; }
-.c-sub         { font-size:.82em; color:#555; margin:0; }
+.pc { position:relative; background:var(--card); border:1px solid var(--line);
+      border-radius:var(--radius); padding:17px 18px 15px; margin-bottom:14px;
+      box-shadow:var(--shadow); overflow:hidden;
+      transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.pc:hover { transform:translateY(-2px); box-shadow:var(--shadow-hover);
+            border-color:rgba(255,255,255,.16); }
+.pc::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+              background:var(--ok-accent); }
+.pc.t-great { background:linear-gradient(180deg,var(--great-tint),var(--card) 60%); }
+.pc.t-good  { background:linear-gradient(180deg,var(--good-tint),var(--card) 60%); }
+.pc.t-great::before { background:var(--great-accent); }
+.pc.t-good::before  { background:var(--good-accent); }
+.pc.t-ok::before    { background:var(--ok-accent); }
+.pc.t-empty, .pc.t-partial { background:var(--card-soft); border-style:dashed; box-shadow:none; }
+.pc.t-empty::before, .pc.t-partial::before { background:var(--line); }
+
+.pc-head { display:flex; align-items:center; justify-content:space-between;
+           gap:8px; margin-bottom:9px; min-height:20px; }
+.c-date  { font-size:.72rem; font-weight:600; letter-spacing:.04em;
+           text-transform:uppercase; color:var(--ink-500); }
+.c-price { font-size:2rem; font-weight:800; letter-spacing:-.02em; line-height:1;
+           color:var(--ink-900); margin:2px 0 9px; }
+.pc.t-great .c-price { color:var(--great-ink); }
+.pc.t-good  .c-price { color:var(--good-ink); }
+.c-price.is-empty { color:var(--ink-400); font-weight:700; }
+.c-dest  { font-size:1rem; font-weight:600; color:var(--ink-900); margin:0 0 4px; }
+.c-dest .muted { color:var(--ink-500); font-weight:500; }
+.c-sub   { font-size:.82rem; color:var(--ink-500); margin:0; line-height:1.4; }
+
 /* Badges */
-.badge         { display:inline-block; padding:1px 7px; border-radius:4px;
-                 font-size:.68em; font-weight:700; vertical-align:middle; margin-left:5px; }
-.b-great       { background:#28a745; color:#fff; }
-.b-good        { background:#ffc107; color:#333; }
-.b-ok          { background:#6c757d; color:#fff; }
-.b-wizz        { background:#c5166a; color:#fff; }
+.badge { display:inline-flex; align-items:center; padding:3px 9px; border-radius:999px;
+         font-size:.64rem; font-weight:700; letter-spacing:.05em;
+         text-transform:uppercase; white-space:nowrap; line-height:1; }
+.b-great { background:var(--great-accent); color:#05271c; }
+.b-good  { background:var(--good-accent); color:#3a2905; }
+.b-ok    { background:rgba(255,255,255,.10); color:var(--ink-700); }
+.b-info  { background:rgba(99,102,241,.20); color:#c7d2fe; }
+.b-wizz  { background:rgba(244,114,182,.16); color:#f9a8d4; margin-left:6px; }
+
+/* Legend */
+.legend-chip { display:inline-flex; align-items:center; gap:8px; font-size:.8rem;
+               color:var(--ink-700); font-weight:500; }
+.legend-dot  { width:11px; height:11px; border-radius:4px; display:inline-block; flex:0 0 auto; }
+
+/* Section heading */
+.sec-title { font-size:1.05rem; font-weight:700; color:var(--ink-900); margin:.1rem 0 .2rem; }
+.sec-sub   { font-size:.85rem; color:var(--ink-500); margin:0 0 .6rem; }
+
+/* Buttons */
+.stButton button { border-radius:10px; font-weight:600; }
+.stButton button[kind="primary"] { box-shadow:var(--shadow); }
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] { gap:2px; border-bottom:1px solid var(--line); }
+.stTabs [data-baseweb="tab"] { height:44px; padding:0 18px; font-weight:600;
+                               color:var(--ink-500); background:transparent;
+                               border-radius:9px 9px 0 0; }
+.stTabs [data-baseweb="tab"]:hover { color:var(--ink-900); background:rgba(255,255,255,.04); }
+.stTabs [aria-selected="true"] { color:var(--ink-900) !important; }
+.stTabs [data-baseweb="tab-highlight"] { background:var(--great-accent); height:2.5px; }
+
+/* Data grid */
+[data-testid="stDataFrame"] { border:1px solid var(--line); border-radius:12px;
+                              overflow:hidden; box-shadow:var(--shadow); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -202,9 +309,17 @@ with st.sidebar:
     st.caption("Prices = **total for 2 people, roundtrip, USD.**")
     st.caption("**W** badge = Wizz Air — membership discount not reflected in price shown.")
 
+    st.divider()
+    debug_mode = st.checkbox(
+        "Debug mode (verbose fetch logging)",
+        value=False,
+        help="Print each window being fetched and how many results it returned "
+             "to the terminal running Streamlit.",
+    )
+
 
 # ── Refresh ───────────────────────────────────────────────────────────────────
-def do_refresh() -> dict:
+def do_refresh(debug: bool = False) -> dict:
     today      = date.today()
     fetched_at = datetime.utcnow().isoformat()
     windows    = [w for w in get_all_windows(today) if w["outbound_date"] >= today]
@@ -223,30 +338,60 @@ def do_refresh() -> dict:
                 f"{fmt_day(w['outbound_date'])} - {fmt_day(w['return_date'])}"
             ),
         )
+
+        # Throttle to avoid SerpApi rate limiting (2s between calls, not before the first).
+        if i > 1:
+            time.sleep(2)
+
+        tag = (f"{i}/{len(windows)} {w['label']} {w['fri_date']} "
+               f"({w['outbound_date']} -> {w['return_date']})")
         try:
-            raw  = fetch_explore(w["outbound_date"], w["return_date"])
-            rows = parse_explore_results(raw, w["fri_date"], w["label"], fetched_at)
+            raw = fetch_explore(w["outbound_date"], w["return_date"])
+
+            # Rate-limited / failed calls come back as an error dict WITHOUT raising
+            # and WITHOUT a 'destinations' key — count them as errors instead of
+            # silently dropping the window.
+            if "error" in raw:
+                n_errors += 1
+                if debug:
+                    print(f"[REFRESH] {tag}: API ERROR -> {raw['error']}")
+                st.warning(f"API error ({w['label']} {w['fri_date']}): {raw['error']}")
+                continue
+
+            n_dest = len(raw.get("destinations", []))
+            rows   = parse_explore_results(raw, w["fri_date"], w["label"], fetched_at)
+            if debug:
+                print(f"[REFRESH] {tag}: {n_dest} destinations returned, "
+                      f"{len(rows)} rows after filters -> inserting")
             all_rows.extend(rows)
         except Exception as exc:
             n_errors += 1
+            if debug:
+                print(f"[REFRESH] {tag}: EXCEPTION -> {exc}")
             st.warning(f"Error ({w['label']} {w['fri_date']}): {exc}")
 
     prog.empty()
 
+    # Always record the fetch, even when zero rows came back (e.g. everything was
+    # rate-limited) — otherwise fetch_log silently misses the run entirely.
+    conn = get_conn()
     if all_rows:
-        conn = get_conn()
         insert_flights(all_rows, conn=conn)
-        log_fetch(
-            {
-                "fetched_at":       fetched_at,
-                "weekends_fetched": len({w["fri_date"] for w in windows}),
-                "calls_made":       len(windows) - n_errors,
-                "status":           "success" if not n_errors else "partial",
-                "notes":            f"{n_errors} errors" if n_errors else None,
-            },
-            conn=conn,
-        )
-        conn.close()
+    log_fetch(
+        {
+            "fetched_at":       fetched_at,
+            "weekends_fetched": len({w["fri_date"] for w in windows}),
+            "calls_made":       len(windows) - n_errors,
+            "status":           "success" if not n_errors else "partial",
+            "notes":            f"{n_errors} errors" if n_errors else None,
+        },
+        conn=conn,
+    )
+    conn.close()
+
+    if debug:
+        print(f"[REFRESH] done: {len(all_rows)} rows, "
+              f"{len(windows)} calls, {n_errors} errors")
 
     return {"rows": len(all_rows), "calls": len(windows), "errors": n_errors}
 
@@ -254,10 +399,12 @@ def do_refresh() -> dict:
 # ── Header ────────────────────────────────────────────────────────────────────
 h_col, r_col = st.columns([5, 1])
 with h_col:
-    st.title("Moldova Flight Tracker")
-    st.caption(
-        f"Departing from **RMO** (Chisinau)  |  "
-        f"Last updated: **{get_last_updated_str()}**"
+    st.markdown(
+        '<div class="hero-title">Moldova Flight Tracker</div>'
+        '<div class="hero-sub">Departing <b>RMO</b> &middot; Chi&#537;in&#259;u'
+        '<span class="hero-dot"></span>'
+        f'Last updated <b>{get_last_updated_str()}</b></div>',
+        unsafe_allow_html=True,
     )
 with r_col:
     st.write("")  # push button down to align with title baseline
@@ -269,7 +416,7 @@ st.divider()
 
 # ── Handle refresh click ───────────────────────────────────────────────────────
 if refresh_btn:
-    result = do_refresh()
+    result = do_refresh(debug=debug_mode)
     if result["rows"]:
         msg = f"Fetched {result['rows']} prices across {result['calls']} API calls."
         if result["errors"]:
@@ -313,13 +460,29 @@ with tab_overview:
             date_lbl  = date_range_label(fri, wl)
 
             if best is None:
-                html = (
-                    f'<div class="pc t-empty">'
-                    f'<p class="c-date">{date_lbl}</p>'
-                    f'<p class="c-price" style="font-size:1.4em;color:#ccc;">—</p>'
-                    f'<p class="c-sub">No data — click Refresh</p>'
-                    f'</div>'
-                )
+                # Distinguish 'no data at all' from 'data exists for other windows'.
+                other = [w for w in windows_with_data_for_friday(fri.isoformat())
+                         if w != wl]
+                if other:
+                    avail = ", ".join(WINDOW_DISPLAY[w] for w in other)
+                    html = (
+                        f'<div class="pc t-partial">'
+                        f'<div class="pc-head"><span class="c-date">{date_lbl}</span>'
+                        f'<span class="badge b-info">Other windows</span></div>'
+                        f'<div class="c-price is-empty">&mdash;</div>'
+                        f'<div class="c-sub">No {WINDOW_DISPLAY[wl]} data. '
+                        f'Available for <strong>{avail}</strong> &mdash; '
+                        f'switch window type in the sidebar.</div>'
+                        f'</div>'
+                    )
+                else:
+                    html = (
+                        f'<div class="pc t-empty">'
+                        f'<div class="pc-head"><span class="c-date">{date_lbl}</span></div>'
+                        f'<div class="c-price is-empty">&mdash;</div>'
+                        f'<div class="c-sub">No data yet &mdash; click Refresh.</div>'
+                        f'</div>'
+                    )
             else:
                 tier    = price_tier(best["price_usd_2pax"])
                 price   = best["price_usd_2pax"]
@@ -330,12 +493,15 @@ with tab_overview:
                 stops_s = "Nonstop" if stops_n == 0 else f"{stops_n} stop"
                 t_badge = f'<span class="badge b-{tier}">{TIER_LABEL[tier]}</span>'
                 w_badge = '<span class="badge b-wizz">W</span>' if is_wizz(airline) else ""
+                airline_html = f'{airline}{w_badge}' if airline else w_badge
+                meta    = " &middot; ".join(p for p in (airline_html, stops_s) if p)
                 html = (
                     f'<div class="pc t-{tier}">'
-                    f'<p class="c-date">{date_lbl}</p>'
-                    f'<p class="c-price">${price:,.0f}{t_badge}</p>'
-                    f'<p class="c-dest"><strong>{city}</strong>, {country}</p>'
-                    f'<p class="c-sub">{airline}{w_badge} &middot; {stops_s}</p>'
+                    f'<div class="pc-head"><span class="c-date">{date_lbl}</span>'
+                    f'{t_badge}</div>'
+                    f'<div class="c-price">${price:,.0f}</div>'
+                    f'<div class="c-dest">{city}<span class="muted">, {country}</span></div>'
+                    f'<div class="c-sub">{meta}</div>'
                     f'</div>'
                 )
 
@@ -346,20 +512,20 @@ with tab_overview:
         st.divider()
         lcols = st.columns(4, gap="small")
         lcols[0].markdown(
-            '<span class="badge b-great" style="font-size:.9em;">Great Deal</span>'
-            '&nbsp; under $400', unsafe_allow_html=True
+            '<div class="legend-chip"><span class="legend-dot" style="background:#34d399">'
+            '</span>Great Deal &middot; under $400</div>', unsafe_allow_html=True
         )
         lcols[1].markdown(
-            '<span class="badge b-good" style="font-size:.9em;">Good Option</span>'
-            '&nbsp; $400 - $499', unsafe_allow_html=True
+            '<div class="legend-chip"><span class="legend-dot" style="background:#fbbf24">'
+            '</span>Good Option &middot; $400 &ndash; $499</div>', unsafe_allow_html=True
         )
         lcols[2].markdown(
-            '<span class="badge b-ok" style="font-size:.9em;">OK</span>'
-            '&nbsp; $500 - $999', unsafe_allow_html=True
+            '<div class="legend-chip"><span class="legend-dot" style="background:#7c8aa3">'
+            '</span>OK &middot; $500 &ndash; $999</div>', unsafe_allow_html=True
         )
         lcols[3].markdown(
-            '<span class="badge b-wizz" style="font-size:.9em;">W</span>'
-            '&nbsp; Wizz Air (membership discount applies)', unsafe_allow_html=True
+            '<div class="legend-chip"><span class="legend-dot" style="background:#f472b6">'
+            '</span>W &middot; Wizz Air member discount</div>', unsafe_allow_html=True
         )
 
 
@@ -402,26 +568,26 @@ with tab_detail:
 
                 # Build display dataframe
                 display = pd.DataFrame({
-                    "City":           df["destination_city"],
-                    "Country":        df["destination_country"],
-                    "IATA":           df["destination_iata"],
-                    "Price (2 pax)":  df["price_usd_2pax"].apply(lambda p: f"${p:,.0f}"),
-                    "Tier":           df["price_usd_2pax"].apply(
-                                          lambda p: TIER_LABEL[price_tier(p)]
-                                      ),
-                    "Stops":          df["outbound_stops"].apply(
-                                          lambda s: "Nonstop" if s == 0 else str(s)
-                                      ),
-                    "Duration":       df["outbound_duration_min"].apply(fmt_duration),
-                    "Airline":        df["airline"].fillna("-"),
-                    "W":              df["airline"].apply(
-                                          lambda a: "W" if is_wizz(a) else ""
-                                      ),
+                    "City":         df["destination_city"],
+                    "Country":      df["destination_country"],
+                    "IATA":         df["destination_iata"],
+                    "Price":        df["price_usd_2pax"],
+                    "Tier":         df["price_usd_2pax"].apply(
+                                        lambda p: TIER_LABEL[price_tier(p)]
+                                    ),
+                    "Stops":        df["outbound_stops"].apply(
+                                        lambda s: "Nonstop" if s == 0 else f"{s} stop"
+                                    ),
+                    "Duration":     df["outbound_duration_min"].apply(fmt_duration),
+                    "Airline":      df["airline"].fillna("—"),
+                    "Wizz":         df["airline"].apply(
+                                        lambda a: "✦" if is_wizz(a) else ""
+                                    ),
                 })
 
                 st.caption(
-                    f"{len(display)} destinations  |  "
-                    f"{WINDOW_DISPLAY[wl]}  |  sorted cheapest first"
+                    f"**{len(display)}** destinations  &middot;  "
+                    f"{WINDOW_DISPLAY[wl]}  &middot;  sorted cheapest first"
                 )
 
                 st.dataframe(
@@ -429,12 +595,17 @@ with tab_detail:
                     use_container_width=True,
                     hide_index=True,
                     column_config={
-                        "IATA":           st.column_config.TextColumn("IATA",           width="small"),
-                        "Price (2 pax)":  st.column_config.TextColumn("Price (2 pax)",  width="small"),
-                        "Tier":           st.column_config.TextColumn("Tier",           width="medium"),
-                        "Stops":          st.column_config.TextColumn("Stops",          width="small"),
-                        "Duration":       st.column_config.TextColumn("Duration",       width="small"),
-                        "W":              st.column_config.TextColumn("W",              width="small"),
+                        "City":     st.column_config.TextColumn("City",     width="medium"),
+                        "Country":  st.column_config.TextColumn("Country",  width="medium"),
+                        "IATA":     st.column_config.TextColumn("IATA",     width="small"),
+                        "Price":    st.column_config.NumberColumn(
+                                        "Price (2 pax)", format="$%d", width="small"
+                                    ),
+                        "Tier":     st.column_config.TextColumn("Tier",     width="small"),
+                        "Stops":    st.column_config.TextColumn("Stops",    width="small"),
+                        "Duration": st.column_config.TextColumn("Duration", width="small"),
+                        "Airline":  st.column_config.TextColumn("Airline",  width="medium"),
+                        "Wizz":     st.column_config.TextColumn("W",        width="small"),
                     },
                 )
                 st.caption(

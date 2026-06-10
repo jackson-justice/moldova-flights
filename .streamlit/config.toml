@@ -1,0 +1,13 @@
+# Pin the app to a refined dark theme.
+#
+# The custom palette in dashboard.py is built to match this dark canvas: dark
+# elevated cards, light text, and tier accents tuned for contrast on a dark
+# background. Pinning the base keeps the look consistent for every user regardless
+# of their global Streamlit theme preference.
+[theme]
+base                     = "dark"
+primaryColor             = "#34d399"   # emerald — buttons, focus rings, tab highlight
+backgroundColor          = "#0b0f17"   # app canvas (deep slate-black)
+secondaryBackgroundColor = "#151b26"   # sidebar, inputs, cards
+textColor                = "#e6e9ef"   # off-white ink
+font                     = "sans serif"
