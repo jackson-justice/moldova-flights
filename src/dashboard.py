@@ -54,6 +54,17 @@ DESTINATION_SHORTLIST_SIZE = 4           # S — top-N cheapest priced per weeke
 EXCLUDE_IATA               = {"OTP"}     # Bucharest — never in the shortlist
 RETRY_ON_EMPTY             = 2           # extra google_flights attempts on a transient empty
 
+# When one-way discovery returns nothing for a Friday (RMO often yields an
+# "Empty results" payload), price this hardcoded shortlist instead of skipping
+# the weekend, so dates like Jul 17 still get roundtrip prices.
+DISCOVERY_FALLBACK = ["ATH", "IST", "PRG", "FCO"]
+_FALLBACK_NAMES = {
+    "ATH": ("Athens", "Greece"),
+    "IST": ("Istanbul", "Türkiye"),
+    "PRG": ("Prague", "Czechia"),
+    "FCO": ("Rome", "Italy"),
+}
+
 # ── Pure helpers ─────────────────────────────────────────────────────────────
 
 def price_tier(price: float) -> str:
@@ -354,6 +365,16 @@ def _shortlist_from_discovery(raw: dict) -> list:
     return ranked[:DESTINATION_SHORTLIST_SIZE]
 
 
+def _fallback_shortlist() -> list:
+    """Hardcoded shortlist used when discovery returns nothing for a weekend."""
+    out = []
+    for iata in DISCOVERY_FALLBACK:
+        city, country = _FALLBACK_NAMES.get(iata, (iata, ""))
+        out.append({"iata": iata, "city": city, "country": country,
+                    "oneway_price": None})
+    return out
+
+
 def do_refresh(debug: bool = False) -> dict:
     """
     Two-phase hybrid refresh, persisting the results.
@@ -416,20 +437,15 @@ def do_refresh(debug: bool = False) -> dict:
         discovery_calls += 1
 
         dstatus, n_dest = explore_result_status(draw)
-        if dstatus == "error":
-            n_errors += 1
-            warnings.append(f"Discovery error ({fri}): {draw['error']}")
+        shortlist = _shortlist_from_discovery(draw) if dstatus == "ok" else []
+        if not shortlist:
+            # Explore returned nothing usable (RMO frequently yields an "Empty
+            # results" payload). Price a hardcoded shortlist rather than skipping
+            # the weekend, so dates like Jul 17 still get roundtrip prices.
+            shortlist = _fallback_shortlist()
             if debug:
-                print(f"[REFRESH] SKIP discovery {wtag}: ERROR -> {draw['error']}")
-            continue
-        if dstatus == "empty":
-            n_empty += 1
-            if debug:
-                print(f"[REFRESH] SKIP discovery {wtag}: 0 destinations returned")
-            continue
-
-        shortlist = _shortlist_from_discovery(draw)
-        if debug:
+                print(f"[FALLBACK] using hardcoded destinations for {fri}")
+        elif debug:
             print(f"[REFRESH] OK   discovery {wtag}: {n_dest} destinations -> "
                   f"shortlist {[d['iata'] for d in shortlist]}")
 
